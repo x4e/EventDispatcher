@@ -10,6 +10,11 @@ buildscript {
 }
 
 apply plugin: 'kotlin'
+apply plugin: 'maven-publish'
+
+group 'cookiedragon.eventsystem'
+archivesBaseName = 'EventSystem'
+version '0.1'
 
 repositories {
     mavenCentral()
@@ -17,4 +22,22 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "Github"
+            url = uri("https://maven.pkg.github.com/cookiedragon234/EventDispatcher")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
+        }
+    }
 }
