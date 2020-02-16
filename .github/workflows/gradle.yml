@@ -19,4 +19,4 @@ jobs:
     - name: Publish artifact
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew publish
+      run: ./gradlew -Dtoken=${{secrets.GITHUB_TOKEN}} publish
