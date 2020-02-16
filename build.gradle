@@ -14,7 +14,7 @@ apply plugin: 'maven-publish'
 
 group 'cookiedragon.eventsystem'
 archivesBaseName = 'EventSystem'
-version '0.1'
+version = ['git', 'rev-list', '--count', 'master'].execute().text.trim()
 
 repositories {
     mavenCentral()
@@ -30,14 +30,14 @@ publishing {
             name = "Github"
             url = uri("https://maven.pkg.github.com/cookiedragon234/EventDispatcher")
             credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+                username = "cookiedragon234"
+                password = System.getProperty("token")
             }
         }
     }
     publications {
         gpr(MavenPublication) {
-            from(components.java)
+			from(components["java"])
         }
     }
 }
