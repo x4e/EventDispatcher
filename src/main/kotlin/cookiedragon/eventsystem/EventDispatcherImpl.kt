@@ -2,6 +2,7 @@ package cookiedragon.eventsystem
 
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.concurrent.ConcurrentHashMap
@@ -49,15 +50,22 @@ internal object EventDispatcherImpl: EventDispatcher {
 			if (!method.isAnnotationPresent(Subscriber::class.java))
 				continue
 			
+			if (method.returnType != Void.TYPE) {
+				IllegalArgumentException("Subscriber $clazz.${method.name} cannot return type")
+					.printStackTrace()
+				continue
+			}
+			
 			if (method.parameterCount != 1) {
 				IllegalArgumentException("Expected only 1 parameter for $clazz.${method.name}")
-						.printStackTrace()
+					.printStackTrace()
 				continue
 			}
 			method.isAccessible = true
 
 			val eventType = method.parameterTypes[0]!!
 			val methodHandle = lookup.unreflect(method)
+				.asType(MethodType.methodType(Void.TYPE, eventType))
 
 			subscriptions.getOrPut(
 				eventType, {
