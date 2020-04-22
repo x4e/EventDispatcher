@@ -14,15 +14,17 @@ internal object EventDispatcherImpl: EventDispatcher {
 	override fun <T : Any> dispatch(event: T): T {
 		var clazz: Class<*> = event.javaClass
 		while (true) {
-			val methods = subscriptions[clazz] ?: break
-			for (method in methods) {
-				if (method.active) {
-					method.invoke(event)
+			subscriptions[clazz]?.let { methods ->
+				for (method in methods) {
+					if (method.active) {
+						method.invoke(event)
+					}
 				}
 			}
-			clazz = clazz.superclass
 			if (clazz == Any::class.java)
 				break
+			clazz = clazz.superclass
+
 		}
 		return event
 	}
