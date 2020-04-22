@@ -14,8 +14,7 @@ internal object EventDispatcherImpl: EventDispatcher {
 	override fun <T : Any> dispatch(event: T): T {
 		var clazz: Class<*> = event.javaClass
 		while (true) {
-			val methods = subscriptions[clazz]
-			if (methods != null) {
+			subscriptions[clazz]?.let { methods ->
 				for (method in methods) {
 					if (method.active) {
 						method.invoke(event)
