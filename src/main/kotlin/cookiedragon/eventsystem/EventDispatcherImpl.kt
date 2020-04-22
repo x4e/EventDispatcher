@@ -63,7 +63,7 @@ internal object EventDispatcherImpl: EventDispatcher {
 				eventType, {
 					hashSetOf()
 				}
-			).add(SubscribingMethod(clazz, instance, methodHandle))
+			).add(SubscribingMethod(clazz, instance, method.isStatic(), methodHandle))
 		}
 	}
 	
@@ -97,12 +97,14 @@ internal object EventDispatcherImpl: EventDispatcher {
 	}
 }
 
-data class SubscribingMethod(val clazz: Class<*>, val instance: Any?, val method: MethodHandle, var active: Boolean = false) {
-
-	
+data class SubscribingMethod(val clazz: Class<*>, val instance: Any?, val static: Boolean, val method: MethodHandle, var active: Boolean = false) {
 	@Throws(Throwable::class)
 	fun invoke(event: Any) {
-		method.invoke(this.instance, event)
+		if (static) {
+			method.invoke(event)
+		} else {
+			method.invoke(this.instance, event)
+		}
 	}
 }
 
