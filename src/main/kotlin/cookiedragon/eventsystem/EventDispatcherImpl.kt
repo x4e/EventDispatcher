@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
  * @author cookiedragon234 15/Feb/2020
  */
 internal object EventDispatcherImpl: EventDispatcher {
+	private val lookup = MethodHandles.lookup()
 	private val subscriptions: MutableMap<Class<*>, MutableSet<SubscribingMethod>> = ConcurrentHashMap()
 	
 	override fun <T : Any> dispatch(event: T): T {
@@ -56,7 +57,7 @@ internal object EventDispatcherImpl: EventDispatcher {
 			method.isAccessible = true
 
 			val eventType = method.parameterTypes[0]!!
-			val methodHandle = MethodHandles.lookup().unreflect(method)
+			val methodHandle = lookup.unreflect(method)
 
 			subscriptions.getOrPut(
 				eventType, {
