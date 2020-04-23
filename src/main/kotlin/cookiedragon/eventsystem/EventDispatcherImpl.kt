@@ -110,10 +110,11 @@ data class SubscribingMethod<T:Any>(val clazz: Class<*>, val instance: T?, val s
 	@Throws(Throwable::class)
 	fun <E:Any> invoke(event: E) {
 		if(static){
-			val void = method.invoke(null, event) as Void
+			method.invoke(event)
 		} else {
-			val void = method.invoke(instance as T, event) as Void
+			method.invoke(instance,event)
 		}
+
 	}
 }
 
