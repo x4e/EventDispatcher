@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 internal object EventDispatcherImpl: EventDispatcher {
 	private val lookup = MethodHandles.lookup()
-	private val subscriptions: MutableMap<Class<*>, MutableSet<SubscribingMethod>> = ConcurrentHashMap()
+	private val subscriptions: MutableMap<Class<*>, MutableSet<SubscribingMethod<*>>> = ConcurrentHashMap()
 	
 	override fun <T : Any> dispatch(event: T): T {
 		var clazz: Class<*> = event.javaClass
@@ -65,7 +65,7 @@ internal object EventDispatcherImpl: EventDispatcher {
 
 			val eventType = method.parameterTypes[0]!!
 			val methodHandle = lookup.unreflect(method)
-				.asType(MethodType.methodType(Void.TYPE, eventType))
+//				.asType(MethodType.methodType(Void.TYPE, eventType))
 
 			subscriptions.getOrPut(
 				eventType, {
@@ -106,13 +106,13 @@ internal object EventDispatcherImpl: EventDispatcher {
 }
 
 
-data class SubscribingMethod(val clazz: Class<*>, val instance: Any?, val static: Boolean, val method: MethodHandle, var active: Boolean = false) {
+data class SubscribingMethod<T:Any>(val clazz: Class<*>, val instance: T?, val static: Boolean, val method: MethodHandle, var active: Boolean = false) {
 	@Throws(Throwable::class)
-	fun invoke(event: Any) {
-		if (static) {
-			method.invoke(event)
+	fun <E:Any> invoke(event: E) {
+		if(static){
+			val void = method.invoke(null, event) as Void
 		} else {
-			method.invoke(this.instance, event)
+			val void = method.invoke(instance as T, event) as Void
 		}
 	}
 }
