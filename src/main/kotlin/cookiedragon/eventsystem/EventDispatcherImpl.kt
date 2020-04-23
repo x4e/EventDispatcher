@@ -1,6 +1,8 @@
 package cookiedragon.eventsystem
 
-import java.lang.reflect.InvocationTargetException
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.concurrent.ConcurrentHashMap
@@ -9,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
  * @author cookiedragon234 15/Feb/2020
  */
 internal object EventDispatcherImpl: EventDispatcher {
+	private val lookup = MethodHandles.lookup()
 	private val subscriptions: MutableMap<Class<*>, MutableSet<SubscribingMethod>> = ConcurrentHashMap()
 	
 	override fun <T : Any> dispatch(event: T): T {
@@ -47,19 +50,28 @@ internal object EventDispatcherImpl: EventDispatcher {
 			if (!method.isAnnotationPresent(Subscriber::class.java))
 				continue
 			
-			if (method.parameterCount != 1) {
-				IllegalArgumentException("Expected only 1 parameter for $clazz.${method.name}")
-						.printStackTrace()
+			if (method.returnType != Void.TYPE) {
+				IllegalArgumentException("Subscriber $clazz.${method.name} cannot return type")
+					.printStackTrace()
 				continue
 			}
 			
+			if (method.parameterCount != 1) {
+				IllegalArgumentException("Expected only 1 parameter for $clazz.${method.name}")
+					.printStackTrace()
+				continue
+			}
+			method.isAccessible = true
+
 			val eventType = method.parameterTypes[0]!!
-			
+			val methodHandle = lookup.unreflect(method)
+				.asType(MethodType.methodType(Void.TYPE, eventType))
+
 			subscriptions.getOrPut(
 				eventType, {
 					hashSetOf()
 				}
-			).add(SubscribingMethod(clazz, instance, method))
+			).add(SubscribingMethod(clazz, instance, method.isStatic(), methodHandle))
 		}
 	}
 	
@@ -93,21 +105,13 @@ internal object EventDispatcherImpl: EventDispatcher {
 	}
 }
 
-data class SubscribingMethod(val clazz: Class<*>, val instance: Any?, val method: Method, var active: Boolean = false) {
-	init {
-		method.isAccessible = true
-	}
-	
+data class SubscribingMethod(val clazz: Class<*>, val instance: Any?, val static: Boolean, val method: MethodHandle, var active: Boolean = false) {
 	@Throws(Throwable::class)
 	fun invoke(event: Any) {
-		try {
+		if (static) {
+			method.invoke(event)
+		} else {
 			method.invoke(this.instance, event)
-		} catch (throwable: Throwable) {
-			// If the method threw an exception
-			if (throwable is InvocationTargetException) {
-				throw throwable.cause ?: throwable
-			}
-			// Otherwise ignore the exception
 		}
 	}
 }
