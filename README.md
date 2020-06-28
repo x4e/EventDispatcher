@@ -17,57 +17,40 @@ dependencies {
 
 Kotlin:
 ```Kotlin
-data class ExampleEvent(val str: String)
+data class ExampleEvent(var str: String)
 
-object ApplicationEntryPoint {
+object Test {
 	init {
-		EventDispatcher.register(Listener);
-		EventDispatcher.subscribe(Listener);
-		with (ExampleEvent("a")) {
-			EventDispatcher.dispatch(this);
-			println(str); // "b"
+		EventDispatcher.register { event: ExampleEvent ->
+			println("Event Received!")
+			event.str = "b"
 		}
-	}
-}
-
-object Listener {
-	@Subscriber
-	private fun onExampleEvent(event: ExampleEvent) {
-		println("Event Recieved!")
-		event.str = "b";
+		with (ExampleEvent("a")) {
+			EventDispatcher.dispatch(this)
+			println(str) // "b"
+		}
 	}
 }
 ```
 
 Java:
 ```Java
-public class ExampleEvent {
-	private String str;
-	
-	public ExampleEvent(String str) {
-		this.str = str;
+public class Test {
+	static class Event {
+		public String str;
+		public Event(String str) {
+			this.str = str;
+		}
 	}
 	
-	public String getStr() { return str; }
-	public String setStr(String str) { this.str = str; }
-}
-
-public class ApplicationEntryPoint {
-	public ApplicationEntryPoint() {
-		Listener listener = new Listener();
-		EventDispatcher.Companion.register(listener);
-		EventDispatcher.Companion.subscribe(listener);
-		ExampleEvent event = new ExampleEvent("a");
-		EventDispatcher.Companion.dispatch(event);
-		System.out.println(event.getStr()); // "b"
-	}
-}
-
-public class Listener {
-	@Subscriber
-	private void onExampleEvent(ExampleEvent event) {
-		System.out.println("Event Recieved");
-		event.setStr("b");
+	static {
+		EventDispatcher.register(Event.class, event -> {
+			event.str = "b";
+			return Unit.INSTANCE;
+		});
+		Event event = new Event("a");
+		EventDispatcher.dispatch(event);
+		System.out.println(event.str); // "b"
 	}
 }
 ```
