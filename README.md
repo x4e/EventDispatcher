@@ -45,6 +45,7 @@ public class Test {
 	
 	static {
 		EventDispatcher.register(Event.class, event -> {
+			System.out.println("Event Received!");
 			event.str = "b";
 			return Unit.INSTANCE;
 		});
