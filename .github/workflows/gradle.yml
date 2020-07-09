@@ -16,7 +16,3 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew build
-    - name: Publish artifact
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew -Dtoken=${{secrets.GITHUB_TOKEN}} publish
