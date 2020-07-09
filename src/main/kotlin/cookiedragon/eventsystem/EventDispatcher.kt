@@ -1,5 +1,7 @@
 package cookiedragon.eventsystem
 
+import java.util.*
+
 /**
  * @author cookiedragon234 24/Jun/2020
  */
